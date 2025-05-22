@@ -1,11 +1,14 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Landing from './components/Landing';
-import Footer from './components/Footer';
 import Background from './components/Background';
+import Auth from './components/Auth/Auth';
+import Dashboard from './components/Dashboard/Dashboard';
+import * as api from './services/api';
 
 const theme = createTheme({
   palette: {
@@ -124,22 +127,79 @@ const theme = createTheme({
   },
 });
 
-function App() {
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        console.log('Checking authentication status...');
+        const response = await api.getCurrentUser();
+        console.log('Auth check response:', response);
+        
+        if (response.success) {
+          console.log('User authenticated:', response.user);
+          setUser(response.user);
+        } else {
+          console.log('User not authenticated');
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setAuthError(error.message);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  // Protected Route component
+  const ProtectedRoute = ({ children }) => {
+    if (loading) {
+      console.log('Auth status: Loading...');
+      return null; // or a loading spinner
+    }
+    
+    console.log('Protected route check - User:', user ? 'Authenticated' : 'Not authenticated');
+    return user ? children : <Navigate to="/auth" />;
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <div className="min-h-screen flex flex-col">
+        <div style={{ 
+          minHeight: '100vh', 
+          display: 'flex', 
+          flexDirection: 'column',
+          overflowX: 'hidden',
+          overflowY: 'auto',
+          width: '100%',
+          position: 'relative'
+        }}>
           <Background />
-          <Navbar />
+          <Navbar user={user} setUser={setUser} />
           <Routes>
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
+            <Route path="/auth" element={user ? <Navigate to="/dashboard" /> : <Auth setUser={setUser} />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard user={user} setUser={setUser} />
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
-          
         </div>
       </Router>
     </ThemeProvider>
   );
-}
+};
 
 export default App;

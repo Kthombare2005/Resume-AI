@@ -137,12 +137,14 @@ const Landing = () => {
     <Container 
       maxWidth="lg" 
       sx={{
-        minHeight: 'calc(100vh - 140px)',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         pt: { xs: '80px', md: '100px' },
-        pb: { xs: '20px', md: '30px' }
+        pb: { xs: '40px', md: '60px' },
+        minHeight: '100%',
+        position: 'relative',
+        zIndex: 1
       }}
     >
       <motion.div
@@ -308,11 +310,11 @@ const Landing = () => {
             >
               <Button
                 component={RouterLink}
-                to="/upload"
+                to="/auth"
                 variant="contained"
                 size="large"
                 sx={{
-                  fontSize: '1rem',
+                  fontSize: '1.1rem',
                   py: 1.5,
                   px: 4,
                   backgroundColor: '#4361ee',
@@ -325,7 +327,7 @@ const Landing = () => {
                   boxShadow: '0 4px 14px rgba(67, 97, 238, 0.3)',
                 }}
               >
-                Upload Resume
+                Get Started
               </Button>
               <Button
                 component={RouterLink}

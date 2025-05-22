@@ -48,7 +48,7 @@ const Navbar = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Button
+            {/* <Button
               variant="contained"
               sx={{
                 background: 'linear-gradient(45deg, #4361ee 30%, #3a0ca3 90%)',
@@ -85,7 +85,7 @@ const Navbar = () => {
               }}
             >
               <span className="buttonText">Get Started</span>
-            </Button>
+            </Button> */}
           </motion.div>
         </Box>
 

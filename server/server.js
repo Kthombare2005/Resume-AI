@@ -11,13 +11,30 @@ const userRoutes = require('./routes/users');
 const app = express();
 
 // CORS configuration
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [
+      'https://resume-ai-client.vercel.app',
+      'https://resume-ai-git-main-your-username.vercel.app',
+      'https://resume-ai.vercel.app',
+      process.env.CLIENT_URL
+    ].filter(Boolean)
+  : ['http://localhost:3000', 'http://localhost:5173'];
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://resume-ai-client.vercel.app', process.env.CLIENT_URL].filter(Boolean)
-    : ['http://localhost:3000', 'http://localhost:5173'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
   exposedHeaders: ['set-cookie'],
 };
 

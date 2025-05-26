@@ -21,69 +21,65 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
 
 console.log('Allowed Origins:', allowedOrigins);
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    console.log('Request Origin:', origin);
-    
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      console.log('No origin provided');
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.includes(origin)) {
-      console.log('Origin allowed:', origin);
-      callback(null, true);
-    } else {
-      console.log('Origin not allowed:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-  exposedHeaders: ['set-cookie']
-};
-
-// Apply CORS middleware
-app.use(cors(corsOptions));
-
-// Additional headers for CORS
+// Apply CORS before any route handlers
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  
+  // Log the incoming request details
+  console.log('Incoming request:', {
+    origin,
+    method: req.method,
+    path: req.path,
+    headers: req.headers
+  });
+
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+    res.setHeader('Access-Control-Expose-Headers', 'set-cookie');
   }
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   next();
 });
 
-// Parse JSON bodies
+// Parse JSON bodies and cookies
 app.use(express.json());
 app.use(cookieParser());
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
     environment: process.env.NODE_ENV,
-    allowedOrigins: allowedOrigins 
+    allowedOrigins 
   });
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    message: process.env.NODE_ENV === 'development' 
-      ? err.message 
-      : 'Something went wrong!' 
+  console.error('Error:', err);
+  
+  // Ensure CORS headers are set even for error responses
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+
+  res.status(err.status || 500).json({ 
+    success: false,
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong!'
   });
 });
 

@@ -1,3 +1,9 @@
+const express = require('express');
+const router = express.Router();
+const bcrypt = require('bcryptjs');
+const User = require('../models/userModel');
+const { protect: auth } = require('../middleware/authMiddleware');
+
 // Update user profile
 router.put('/profile', auth, async (req, res) => {
   try {
@@ -46,4 +52,6 @@ router.put('/profile', auth, async (req, res) => {
     console.error('Profile update error:', error);
     res.status(500).json({ success: false, message: 'Error updating profile' });
   }
-}); 
+});
+
+module.exports = router; 

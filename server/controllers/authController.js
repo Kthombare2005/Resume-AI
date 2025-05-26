@@ -1,5 +1,6 @@
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -86,9 +87,17 @@ exports.login = async (req, res) => {
   try {
     console.log('Login attempt with:', { email: req.body.email });
     const { email, password } = req.body;
-
-    // Check if user exists
-    const user = await User.findOne({ email }).select('+password');
+    
+    const normalizedEmail = email.toLowerCase();
+    console.log('Normalized email:', normalizedEmail);
+    
+    // Log MongoDB connection status
+    console.log('MongoDB connection state:', mongoose.connection.readyState);
+    
+    // Check if user exists (convert email to lowercase)
+    console.log('Attempting to find user with email:', normalizedEmail);
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    console.log('Database query result:', user);
     console.log('User found:', user ? 'Yes' : 'No');
 
     if (!user) {
@@ -175,5 +184,28 @@ exports.getMe = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Debug endpoint to list all users (REMOVE IN PRODUCTION)
+exports.debugListUsers = async (req, res) => {
+  try {
+    console.log('Current database:', mongoose.connection.db.databaseName);
+    console.log('Current collections:', await mongoose.connection.db.listCollections().toArray());
+    
+    const users = await User.find({}, { email: 1, _id: 0 });
+    console.log('All users in database:', users);
+    
+    res.status(200).json({
+      success: true,
+      databaseName: mongoose.connection.db.databaseName,
+      users: users
+    });
+  } catch (error) {
+    console.error('Debug endpoint error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 }; 

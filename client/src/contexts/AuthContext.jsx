@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { login as loginApi, register as registerApi } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -9,24 +10,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (formData) => {
     try {
       setLoading(true);
-      // Here you would typically make an API call to your backend
-      // For now, we'll simulate a successful login
-      const mockUser = {
-        id: '1',
-        fullName: 'User',
-        email: formData.email,
-        phoneNumber: '',
-        avatar: null
-      };
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      const response = await loginApi(formData);
+      
       // Store user data in localStorage for persistence
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      setUser(response.user);
+      
+      return response;
     } catch (error) {
-      throw new Error('Login failed. Please check your credentials.');
+      throw new Error(error.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -35,24 +27,15 @@ export const AuthProvider = ({ children }) => {
   const register = async (formData) => {
     try {
       setLoading(true);
-      // Here you would typically make an API call to your backend
-      // For now, we'll simulate a successful registration
-      const mockUser = {
-        id: '1',
-        fullName: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        avatar: null
-      };
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      const response = await registerApi(formData);
+      
       // Store user data in localStorage for persistence
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      setUser(response.user);
+      
+      return response;
     } catch (error) {
-      throw new Error('Registration failed. Please try again.');
+      throw new Error(error.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -60,6 +43,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     setUser(null);
   };
 

@@ -38,9 +38,7 @@ import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, setUser } = useAuth();
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
   // If user is not available, show loading state
   if (!user) {
@@ -57,28 +55,6 @@ const Dashboard = () => {
       </Box>
     );
   }
-
-  const handleProfileClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogout = async () => {
-    try {
-      setIsLoading(true);
-      await api.logout();
-      setUser(null);
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
-      setIsLoading(false);
-      handleClose();
-    }
-  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -110,86 +86,10 @@ const Dashboard = () => {
         variants={containerVariants}
         maxWidth="lg" 
         sx={{ 
-          py: { xs: 6, md: 8 },
-          mt: { xs: 2, md: 3 }
+          py: { xs: 4, md: 6 },
+          px: { xs: 2, md: 4 }
         }}
       >
-        {/* Profile Section */}
-        <Box
-          component={motion.div}
-          variants={itemVariants}
-          sx={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            mb: 4
-          }}
-        >
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              borderRadius: 3,
-              border: '1px solid rgba(67, 97, 238, 0.1)',
-              background: 'rgba(255, 255, 255, 0.9)',
-            }}
-          >
-            <Box sx={{ textAlign: 'right' }}>
-              <Typography variant="subtitle1" fontWeight="600">
-                {user?.firstName} {user?.lastName}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {user?.email}
-              </Typography>
-            </Box>
-            <Tooltip title="Profile Settings">
-              <IconButton
-                onClick={handleProfileClick}
-                disabled={isLoading}
-                sx={{
-                  width: 40,
-                  height: 40,
-                  backgroundColor: '#4361ee',
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: '#3a0ca3',
-                  },
-                }}
-              >
-                {isLoading ? <CircularProgress size={24} color="inherit" /> : <Person />}
-              </IconButton>
-            </Tooltip>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-              PaperProps={{
-                sx: {
-                  mt: 1,
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                  border: '1px solid rgba(67, 97, 238, 0.1)',
-                }
-              }}
-            >
-              <MenuItem onClick={() => { handleClose(); navigate('/settings'); }} disabled={isLoading}>
-                <Stack direction="row" spacing={1.5} alignItems="center">
-                  <Settings fontSize="small" />
-                  <Typography>Settings</Typography>
-                </Stack>
-              </MenuItem>
-              <Divider />
-              <MenuItem onClick={handleLogout} disabled={isLoading}>
-                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: '#f44336' }}>
-                  {isLoading ? <CircularProgress size={20} color="inherit" /> : <ExitToApp fontSize="small" />}
-                  <Typography>Logout</Typography>
-                </Stack>
-              </MenuItem>
-            </Menu>
-          </Paper>
-        </Box>
-
         {/* Welcome Section */}
         <Paper
           component={motion.div}
@@ -219,6 +119,7 @@ const Dashboard = () => {
           <Button
             variant="contained"
             startIcon={<Add />}
+            onClick={() => navigate('/create-resume')}
             sx={{
               py: 1.5,
               px: 3,
@@ -341,6 +242,7 @@ const Dashboard = () => {
                 <Button
                   variant="contained"
                   startIcon={<Add />}
+                  onClick={() => navigate('/create-resume')}
                   sx={{
                     backgroundColor: '#4361ee',
                     '&:hover': { backgroundColor: '#3a0ca3' },

@@ -65,16 +65,28 @@ const Auth = () => {
         // Split full name into first and last name for the register function
         const nameParts = formData.fullName.trim().split(' ');
         const firstName = nameParts[0];
-        const lastName = nameParts.slice(1).join(' ');
+        const lastName = nameParts.slice(1).join(' ') || ''; // Default to empty string if no last name
 
-        await register({
-          ...formData,
+        const response = await register({
           firstName,
           lastName,
+          email: formData.email.toLowerCase(),
+          password: formData.password,
           phoneNumber: `+91${formData.phoneNumber}`,
         });
+
+        if (!response.success) {
+          throw new Error(response.message || 'Registration failed');
+        }
       } else {
-        await login(formData);
+        const response = await login({
+          email: formData.email.toLowerCase(),
+          password: formData.password,
+        });
+
+        if (!response.success) {
+          throw new Error(response.message || 'Login failed');
+        }
       }
       
       // On successful authentication, redirect to dashboard

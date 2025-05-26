@@ -136,7 +136,7 @@ const AppContent = () => {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f8f9ff' }}>
       <Background />
-      <Navbar />
+      {!user && <Navbar />}
       
       {user && <Sidebar />}
       
@@ -146,6 +146,7 @@ const AppContent = () => {
           flexGrow: 1,
           p: 3,
           ml: user ? { xs: 0, md: '280px' } : 0,
+          mt: user ? 0 : '64px',
           transition: 'margin 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
           position: 'relative',
           zIndex: 1,

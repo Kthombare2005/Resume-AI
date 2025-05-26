@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, Box } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
+import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar/Sidebar';
 import Landing from './components/Landing';
 import Background from './components/Background';
@@ -9,7 +10,7 @@ import Auth from './components/Auth/Auth';
 import Dashboard from './components/Dashboard/Dashboard';
 import Settings from './components/Settings/Settings';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 
 const theme = createTheme({
@@ -129,6 +130,90 @@ const theme = createTheme({
   },
 });
 
+const AppContent = () => {
+  const { user } = useAuth();
+
+  return (
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f8f9ff' }}>
+      <Background />
+      <Navbar />
+      
+      {user && <Sidebar />}
+      
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          ml: user ? { xs: 0, md: '280px' } : 0,
+          transition: 'margin 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
+          <Route path="/auth" element={user ? <Navigate to="/dashboard" /> : <Auth />} />
+
+          {/* Protected Routes */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/job-post" 
+            element={
+              <ProtectedRoute>
+                <div>Job Post Page (Coming Soon)</div>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/applied" 
+            element={
+              <ProtectedRoute>
+                <div>Applied Jobs Page (Coming Soon)</div>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/community" 
+            element={
+              <ProtectedRoute>
+                <div>Community Page (Coming Soon)</div>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/messages" 
+            element={
+              <ProtectedRoute>
+                <div>Messages Page (Coming Soon)</div>
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Fallback Route */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Box>
+    </Box>
+  );
+};
+
 const App = () => {
   return (
     <ErrorBoundary>
@@ -136,76 +221,7 @@ const App = () => {
         <CssBaseline />
         <AuthProvider>
           <Router>
-            <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f8f9ff' }}>
-              <Background />
-              <ProtectedRoute>
-                <Sidebar />
-              </ProtectedRoute>
-              <Box
-                component="main"
-                sx={{
-                  flexGrow: 1,
-                  p: 3,
-                  ml: { xs: 0, md: '280px' },
-                  transition: 'margin 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
-                  position: 'relative',
-                  zIndex: 1,
-                }}
-              >
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route 
-                    path="/dashboard" 
-                    element={
-                      <ProtectedRoute>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/settings" 
-                    element={
-                      <ProtectedRoute>
-                        <Settings />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/job-post" 
-                    element={
-                      <ProtectedRoute>
-                        <div>Job Post Page (Coming Soon)</div>
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/applied" 
-                    element={
-                      <ProtectedRoute>
-                        <div>Applied Jobs Page (Coming Soon)</div>
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/community" 
-                    element={
-                      <ProtectedRoute>
-                        <div>Community Page (Coming Soon)</div>
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/messages" 
-                    element={
-                      <ProtectedRoute>
-                        <div>Messages Page (Coming Soon)</div>
-                      </ProtectedRoute>
-                    } 
-                  />
-                </Routes>
-              </Box>
-            </Box>
+            <AppContent />
           </Router>
         </AuthProvider>
       </ThemeProvider>

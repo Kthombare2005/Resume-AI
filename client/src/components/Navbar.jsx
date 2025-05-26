@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, Button, IconButton, Box, Drawer, List, ListItem, Stack } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -7,6 +7,7 @@ import Logo from './Logo';
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -16,9 +17,10 @@ const Navbar = () => {
     <AppBar 
       position="fixed" 
       sx={{ 
-        background: 'transparent',
+        background: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(8px)',
         boxShadow: 'none',
-        border: 'none',
+        borderBottom: '1px solid rgba(67, 97, 238, 0.1)',
         width: '100%'
       }}
     >
@@ -43,12 +45,28 @@ const Navbar = () => {
           <Logo />
         </Link>
 
-        <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            {/* <Button
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2, alignItems: 'center' }}>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button
+              onClick={() => navigate('/auth')}
+              variant="outlined"
+              sx={{
+                borderColor: '#4361ee',
+                color: '#4361ee',
+                fontWeight: 600,
+                '&:hover': {
+                  borderColor: '#3a0ca3',
+                  backgroundColor: 'rgba(67, 97, 238, 0.04)',
+                },
+              }}
+            >
+              Log In
+            </Button>
+          </motion.div>
+          
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button
+              onClick={() => navigate('/auth?mode=signup')}
               variant="contained"
               sx={{
                 background: 'linear-gradient(45deg, #4361ee 30%, #3a0ca3 90%)',
@@ -56,8 +74,6 @@ const Navbar = () => {
                 fontWeight: 600,
                 position: 'relative',
                 overflow: 'hidden',
-                px: 4,
-                backdropFilter: 'none',
                 '& .buttonText': {
                   position: 'relative',
                   zIndex: 2,
@@ -78,14 +94,11 @@ const Navbar = () => {
                   '&::before': {
                     opacity: 1,
                   },
-                  '& .buttonText': {
-                    color: '#ffffff',
-                  },
                 },
               }}
             >
-              <span className="buttonText">Get Started</span>
-            </Button> */}
+              <span className="buttonText">Sign Up</span>
+            </Button>
           </motion.div>
         </Box>
 
@@ -123,10 +136,35 @@ const Navbar = () => {
       >
         <List sx={{ pt: 2 }}>
           <ListItem sx={{ pt: 2 }}>
-            <Stack sx={{ width: '100%' }}>
+            <Stack spacing={2} sx={{ width: '100%' }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={() => {
+                  navigate('/auth');
+                  handleDrawerToggle();
+                }}
+                sx={{
+                  borderColor: '#4361ee',
+                  color: '#4361ee',
+                  fontWeight: 600,
+                  py: 1,
+                  '&:hover': {
+                    borderColor: '#3a0ca3',
+                    backgroundColor: 'rgba(67, 97, 238, 0.04)',
+                  },
+                }}
+              >
+                Log In
+              </Button>
+              
               <Button
                 fullWidth
                 variant="contained"
+                onClick={() => {
+                  navigate('/auth?mode=signup');
+                  handleDrawerToggle();
+                }}
                 sx={{
                   background: 'linear-gradient(45deg, #4361ee 30%, #3a0ca3 90%)',
                   color: '#ffffff',
@@ -154,13 +192,10 @@ const Navbar = () => {
                     '&::before': {
                       opacity: 1,
                     },
-                    '& .buttonText': {
-                      color: '#ffffff',
-                    },
                   },
                 }}
               >
-                <span className="buttonText">Get Started</span>
+                <span className="buttonText">Sign Up</span>
               </Button>
             </Stack>
           </ListItem>

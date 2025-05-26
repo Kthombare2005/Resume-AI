@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -12,97 +13,106 @@ import {
   Stack,
   Alert,
   CircularProgress,
+  InputLabel,
+  OutlinedInput,
+  FormControl,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Google, GitHub, Visibility, VisibilityOff } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import * as api from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
-const Auth = ({ setUser }) => {
+const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, register } = useAuth();
   const [isSignup, setIsSignup] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
+    fullName: '',
+    phoneNumber: '',
     email: '',
     password: '',
     confirmPassword: '',
-    firstName: '',
-    lastName: '',
   });
+
+  useEffect(() => {
+    // Check URL parameters for signup mode
+    const searchParams = new URLSearchParams(location.search);
+    const mode = searchParams.get('mode');
+    setIsSignup(mode === 'signup');
+  }, [location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
-
+    
     try {
+      setIsLoading(true);
+      
       if (isSignup) {
-        // Validate required fields
-        if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-          setError('Please fill in all required fields');
-          setLoading(false);
-          return;
+        // Validate phone number
+        const phoneRegex = /^[6-9]\d{9}$/;
+        if (!phoneRegex.test(formData.phoneNumber)) {
+          throw new Error('Please enter a valid 10-digit phone number');
         }
 
-        // Validate password match
         if (formData.password !== formData.confirmPassword) {
-          setError('Passwords do not match');
-          setLoading(false);
-          return;
+          throw new Error('Passwords do not match');
         }
 
-        console.log('Attempting registration...');
-        const response = await api.register(formData);
-        console.log('Registration response:', response);
-        
-        if (response.success) {
-          setUser(response.data);
-          navigate('/dashboard');
-        }
-      } else {
-        if (!formData.email || !formData.password) {
-          setError('Please fill in all required fields');
-          setLoading(false);
-          return;
-        }
+        // Split full name into first and last name for the register function
+        const nameParts = formData.fullName.trim().split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(' ');
 
-        console.log('Attempting login...');
-        const response = await api.login({ 
-          email: formData.email, 
-          password: formData.password 
+        await register({
+          ...formData,
+          firstName,
+          lastName,
+          phoneNumber: `+91${formData.phoneNumber}`,
         });
-        console.log('Login response:', response);
-
-        if (response.success) {
-          console.log('Setting user state:', response.user);
-          setUser(response.user);
-          navigate('/dashboard');
-        }
+      } else {
+        await login(formData);
       }
+      
+      // On successful authentication, redirect to dashboard
+      navigate('/dashboard');
     } catch (error) {
-      console.error('Auth error:', error);
-      setError(error.message || 'An error occurred');
+      setError(error.message || 'Authentication failed. Please try again.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value.trim() });
+    const { name, value } = e.target;
+    
+    // Handle phone number input
+    if (name === 'phoneNumber') {
+      // Only allow numbers and limit to 10 digits
+      const sanitizedValue = value.replace(/\D/g, '').slice(0, 10);
+      setFormData({ ...formData, [name]: sanitizedValue });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const switchMode = () => {
     setIsSignup((prevIsSignup) => !prevIsSignup);
     setError('');
+    // Reset form data
     setFormData({
+      fullName: '',
+      phoneNumber: '',
       email: '',
       password: '',
       confirmPassword: '',
-      firstName: '',
-      lastName: '',
     });
+    // Update URL without reloading the page
+    const newUrl = isSignup ? '/auth' : '/auth?mode=signup';
+    window.history.pushState({}, '', newUrl);
   };
 
   const containerVariants = {
@@ -177,40 +187,53 @@ const Auth = ({ setUser }) => {
           <form onSubmit={handleSubmit}>
             <Stack spacing={2}>
               {isSignup && (
-                <Stack direction="row" spacing={2}>
+                <>
                   <TextField
-                    name="firstName"
-                    label="First Name"
-                    onChange={handleChange}
-                    fullWidth
+                    name="fullName"
+                    label="Full Name"
                     required
-                  />
-                  <TextField
-                    name="lastName"
-                    label="Last Name"
-                    onChange={handleChange}
                     fullWidth
-                    required
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    placeholder="Enter your full name"
                   />
-                </Stack>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel htmlFor="phone-number">Contact Number</InputLabel>
+                    <OutlinedInput
+                      id="phone-number"
+                      name="phoneNumber"
+                      type="tel"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      required
+                      startAdornment={
+                        <InputAdornment position="start">+91</InputAdornment>
+                      }
+                      label="Contact Number"
+                      placeholder="Enter 10-digit number"
+                    />
+                  </FormControl>
+                </>
               )}
-
               <TextField
                 name="email"
                 label="Email Address"
-                onChange={handleChange}
-                type="email"
-                fullWidth
                 required
+                fullWidth
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email address"
               />
-
               <TextField
                 name="password"
                 label="Password"
-                onChange={handleChange}
-                type={showPassword ? 'text' : 'password'}
-                fullWidth
                 required
+                fullWidth
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -224,15 +247,16 @@ const Auth = ({ setUser }) => {
                   ),
                 }}
               />
-
               {isSignup && (
                 <TextField
                   name="confirmPassword"
                   label="Confirm Password"
-                  onChange={handleChange}
-                  type={showPassword ? 'text' : 'password'}
-                  fullWidth
                   required
+                  fullWidth
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm your password"
                 />
               )}
 
@@ -240,17 +264,19 @@ const Auth = ({ setUser }) => {
                 type="submit"
                 fullWidth
                 variant="contained"
-                disabled={loading}
+                disabled={isLoading}
                 sx={{
                   mt: 2,
                   mb: 2,
-                  backgroundColor: '#4361ee',
+                  background: 'linear-gradient(45deg, #4361ee 30%, #3a0ca3 90%)',
+                  color: '#ffffff',
+                  fontWeight: 600,
                   '&:hover': {
-                    backgroundColor: '#3a0ca3',
+                    background: 'linear-gradient(45deg, #3a0ca3 30%, #4361ee 90%)',
                   },
                 }}
               >
-                {loading ? (
+                {isLoading ? (
                   <CircularProgress size={24} color="inherit" />
                 ) : (
                   isSignup ? 'Sign Up' : 'Sign In'

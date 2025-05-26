@@ -9,6 +9,9 @@ import {
   ListItemText,
   Typography,
   Avatar,
+  IconButton,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -16,6 +19,8 @@ import {
   Work as JobIcon,
   Group as CommunityIcon,
   Message as MessageIcon,
+  ExitToApp as LogoutIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -54,7 +59,31 @@ const menuItems = [
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [anchorEl, setAnchorEl] = React.useState(null);
+
+  const handleProfileClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/auth'); // Redirect to login page after logout
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+    handleClose();
+  };
+
+  const handleSettings = () => {
+    navigate('/settings');
+    handleClose();
+  };
 
   return (
     <Drawer
@@ -100,7 +129,7 @@ const Sidebar = () => {
       </Box>
 
       {/* Navigation Menu */}
-      <List sx={{ px: 2 }}>
+      <List sx={{ px: 2, flex: 1 }}>
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -152,18 +181,15 @@ const Sidebar = () => {
       {/* User Profile Section */}
       <Box
         sx={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
           p: 2,
-          borderTop: '1px solid rgba(0, 0, 0, 0.08)'
+          borderTop: '1px solid rgba(0, 0, 0, 0.08)',
+          mt: 'auto'
         }}
       >
         <ListItemButton
+          onClick={handleProfileClick}
           component={motion.div}
           whileHover={{ x: 4 }}
-          onClick={() => navigate('/settings')}
           sx={{
             borderRadius: 2,
             '&:hover': {
@@ -173,7 +199,7 @@ const Sidebar = () => {
         >
           <Avatar
             src={user?.avatar}
-            alt={user?.firstName}
+            alt={user?.fullName}
             sx={{ 
               width: 32, 
               height: 32,
@@ -183,17 +209,58 @@ const Sidebar = () => {
               fontWeight: 500
             }}
           >
-            {user?.firstName?.[0]?.toUpperCase()}
+            {user?.fullName?.[0]?.toUpperCase()}
           </Avatar>
-          <Box sx={{ ml: 2 }}>
+          <Box sx={{ ml: 2, flex: 1 }}>
             <Typography variant="subtitle2" fontWeight={600}>
-              {user?.firstName} {user?.lastName}
+              {user?.fullName}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {user?.email}
             </Typography>
           </Box>
         </ListItemButton>
+
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleClose}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          PaperProps={{
+            sx: {
+              mt: -1,
+              minWidth: 180,
+              boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
+              '& .MuiMenuItem-root': {
+                px: 2,
+                py: 1.5,
+                borderRadius: 1,
+                mx: 0.5,
+                mb: 0.5,
+              },
+            },
+          }}
+        >
+          <MenuItem onClick={handleSettings}>
+            <ListItemIcon>
+              <SettingsIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Settings</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={handleLogout} sx={{ color: '#d32f2f' }}>
+            <ListItemIcon>
+              <LogoutIcon fontSize="small" sx={{ color: '#d32f2f' }} />
+            </ListItemIcon>
+            <ListItemText>Logout</ListItemText>
+          </MenuItem>
+        </Menu>
       </Box>
     </Drawer>
   );

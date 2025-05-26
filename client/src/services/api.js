@@ -57,18 +57,19 @@ export const login = async (credentials) => {
     }
     return response.data;
   } catch (error) {
+    console.error('Login error:', error);
     throw error.response?.data?.message || 'Login failed';
   }
 };
 
 export const logout = async () => {
   try {
-    const response = await api.get('/auth/logout');
+    await api.post('/auth/logout');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    return response.data;
   } catch (error) {
-    // Even if the server call fails, clear local storage
+    console.error('Logout error:', error);
+    // Still remove items even if the server call fails
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     throw error.response?.data?.message || 'Logout failed';
@@ -81,7 +82,7 @@ export const getCurrentUser = async () => {
     return response.data;
   } catch (error) {
     if (error.response?.status === 401) {
-      return { success: false, message: 'Not authenticated' };
+      return null;
     }
     throw error.response?.data?.message || 'Failed to get user data';
   }
@@ -94,4 +95,6 @@ export const updateProfile = async (updateData) => {
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to update profile');
   }
-}; 
+};
+
+export default api; 
